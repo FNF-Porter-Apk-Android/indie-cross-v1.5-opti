@@ -57,16 +57,12 @@ import hscript.Expr;
 import Discord;
 #end
 
-#if android
-import android.Hardware;
-#end
-
 using StringTools;
 
 class FunkinLua {
-	public static var Function_Stop:Dynamic = "##PSYCHLUA_FUNCTIONSTOP";
-	public static var Function_Continue:Dynamic = "##PSYCHLUA_FUNCTIONCONTINUE";
-	public static var Function_StopLua:Dynamic = "##PSYCHLUA_FUNCTIONSTOPLUA";
+	public static var Function_Stop:Dynamic = #if mobile 'Function_Stop' #else "##PSYCHLUA_FUNCTIONSTOP" #end;
+	public static var Function_Continue:Dynamic = #if mobile 'Function_Continue' #else "##PSYCHLUA_FUNCTIONCONTINUE" #end;
+	public static var Function_StopLua:Dynamic = #if mobile 'Function_StopLua' #else "##PSYCHLUA_FUNCTIONSTOPLUA" #end;
 
 	//public var errorHandler:String->Void;
 	#if LUA_ALLOWED
@@ -95,7 +91,7 @@ class FunkinLua {
 			var resultStr:String = Lua.tostring(lua, result);
 			if(resultStr != null && result != 0) {
 				trace('Error on lua script! ' + resultStr);
-				#if (windows || android)
+				#if (windows || mobile)
 				lime.app.Application.current.window.alert(resultStr, 'Error on lua script!');
 				#else
 				luaTrace('Error loading lua script: "$script"\n' + resultStr, true, false, FlxColor.RED);
@@ -462,7 +458,7 @@ class FunkinLua {
 				shader.setSampler2D(prop, value.bitmap);
 			}
 			#else
-			luaTrace("setSampler2D: Platform unsupported for Runtime Shaders!", false, false, FlxColor.RED);
+			luaTrace("setShaderSampler2D: Platform unsupported for Runtime Shaders!", false, false, FlxColor.RED);
 			#end
 		});
 
@@ -525,7 +521,7 @@ class FunkinLua {
 				doPush = true;
 			}
 			else {
-				cervix = SUtil.getPath() + Paths.getPreloadPath(cervix);
+				cervix = Paths.getPreloadPath(cervix);
 				if(FileSystem.exists(cervix)) {
 					doPush = true;
 				}
@@ -578,7 +574,7 @@ class FunkinLua {
 				doPush = true;
 			}
 			else {
-				cervix = SUtil.getPath() + Paths.getPreloadPath(cervix);
+				cervix = Paths.getPreloadPath(cervix);
 				if(FileSystem.exists(cervix)) {
 					doPush = true;
 				}
@@ -630,7 +626,7 @@ class FunkinLua {
 				doPush = true;
 			}
 			else {
-				cervix = SUtil.getPath() + Paths.getPreloadPath(cervix);
+				cervix = Paths.getPreloadPath(cervix);
 				if(FileSystem.exists(cervix)) {
 					doPush = true;
 				}
@@ -668,7 +664,7 @@ class FunkinLua {
 				doPush = true;
 			}
 			else {
-				cervix = SUtil.getPath() + Paths.getPreloadPath(cervix);
+				cervix = Paths.getPreloadPath(cervix);
 				if(FileSystem.exists(cervix)) {
 					doPush = true;
 				}
@@ -750,7 +746,7 @@ class FunkinLua {
 				doPush = true;
 			}
 			else {
-				cervix = SUtil.getPath() + Paths.getPreloadPath(cervix);
+				cervix = Paths.getPreloadPath(cervix);
 				if(FileSystem.exists(cervix)) {
 					doPush = true;
 				}
@@ -790,7 +786,7 @@ class FunkinLua {
 				doPush = true;
 			}
 			else {
-				cervix = SUtil.getPath() + Paths.getPreloadPath(cervix);
+				cervix = Paths.getPreloadPath(cervix);
 				if(FileSystem.exists(cervix)) {
 					doPush = true;
 				}
@@ -835,7 +831,7 @@ class FunkinLua {
 				doPush = true;
 			}
 			else {
-				cervix = SUtil.getPath() + Paths.getPreloadPath(cervix);
+				cervix = Paths.getPreloadPath(cervix);
 				if(FileSystem.exists(cervix)) {
 					doPush = true;
 				}
@@ -957,7 +953,6 @@ class FunkinLua {
 				result = getVarInArray(getPropertyLoopThingWhatever(killMe), killMe[killMe.length-1]);
 			else
 				result = getVarInArray(getInstance(), variable);
-
 			return result;
 		});
 		Lua_helper.add_callback(lua, "setProperty", function(variable:String, value:Dynamic) {
@@ -990,7 +985,6 @@ class FunkinLua {
 					result = leArray[variable];
 				else
 					result = getGroupStuff(leArray, variable);
-
 				return result;
 			}
 			luaTrace("getPropertyFromGroup: Object #" + index + " from group: " + obj + " doesn't exist!", false, false, FlxColor.RED);
@@ -2142,7 +2136,7 @@ class FunkinLua {
 			path = Paths.modsJson(Paths.formatToSongPath(PlayState.SONG.song) + '/' + dialogueFile);
 			if(!FileSystem.exists(path))
 			#end
-				path = SUtil.getPath() + Paths.json(Paths.formatToSongPath(PlayState.SONG.song) + '/' + dialogueFile);
+				path = Paths.json(Paths.formatToSongPath(PlayState.SONG.song) + '/' + dialogueFile);
 
 			luaTrace('startDialogue: Trying to load dialogue: ' + path);
 
@@ -2308,11 +2302,6 @@ class FunkinLua {
 			#end
 		});
 
-		Lua_helper.add_callback(lua, "vibration", function(milliseconds:Int) {
-			#if android
-			Hardware.vibrate(milliseconds);
-			#end
-		});
 
 		// LUA TEXTS
 		Lua_helper.add_callback(lua, "makeLuaText", function(tag:String, text:String, width:Int, x:Float, y:Float) {
@@ -2490,7 +2479,7 @@ class FunkinLua {
 			{
 				var save:FlxSave = new FlxSave();
 				// folder goes unused for flixel 5 users. @BeastlyGhost
-				save.bind(name , CoolUtil.getSavePath(folder));
+				save.bind(name, CoolUtil.getSavePath(folder));
 				PlayState.instance.modchartSaves.set(name, save);
 				return;
 			}
@@ -2883,10 +2872,8 @@ class FunkinLua {
 			return true;
 		}
 
-		var foldersToCheck:Array<String> = [SUtil.getPath() + Paths.getPreloadPath('shaders/')];
-
+		var foldersToCheck:Array<String> = [Paths.mods('shaders/')];
 		if(Paths.currentModDirectory != null && Paths.currentModDirectory.length > 0)
-
 			foldersToCheck.insert(0, Paths.mods(Paths.currentModDirectory + '/shaders/'));
 
 		for(mod in Paths.getGlobalMods())

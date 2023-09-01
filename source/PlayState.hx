@@ -60,7 +60,6 @@ import StageData;
 import FunkinLua;
 import DialogueBoxPsych;
 import Conductor.Rating;
-import flixel.system.FlxAssets.FlxShader;
 
 #if !flash 
 import flixel.addons.display.FlxRuntimeShader;
@@ -73,14 +72,12 @@ import sys.io.File;
 #end
 
 #if VIDEOS_ALLOWED
-#if (hxCodec >= "3.0.0")
-import hxcodec.flixel.FlxVideo as MP4Handler;
-#elseif (hxCodec == "2.6.1")
+#if (hxCodec >= "2.6.1") 
 import hxcodec.VideoHandler as MP4Handler;
-#elseif (hxCodec == "2.6.0")
+#elseif (hxCodec == "2.6.0") 
 import VideoHandler as MP4Handler;
-#else
-import vlc.MP4Handler;
+#else 
+import VideoHandler as MP4Handler;
 #end
 #end
 
@@ -88,7 +85,7 @@ using StringTools;
 
 class PlayState extends MusicBeatState
 {
-	public static var STRUM_X = 48.5;
+	public static var STRUM_X = 42;
 	public static var STRUM_X_MIDDLESCROLL = -278;
 
 	public static var ratingStuff:Array<Dynamic> = [
@@ -877,34 +874,24 @@ class PlayState extends MusicBeatState
 
 		// "GLOBAL" SCRIPTS
 		#if LUA_ALLOWED
-		var filesPushed:Array<String> = [];
-		var foldersToCheck:Array<String> = [SUtil.getPath() + Paths.getPreloadPath('scripts/')];
-
-		#if MODS_ALLOWED
-		foldersToCheck.insert(0, Paths.mods('scripts/'));
-		if(Paths.currentModDirectory != null && Paths.currentModDirectory.length > 0)
-			foldersToCheck.insert(0, Paths.mods(Paths.currentModDirectory + '/scripts/'));
-
-		for(mod in Paths.getGlobalMods())
-			foldersToCheck.insert(0, Paths.mods(mod + '/scripts/'));
-		#end
-
-		for (folder in foldersToCheck)
-		{
-			if(FileSystem.exists(folder))
-			{
-				for (file in FileSystem.readDirectory(folder))
-				{
-					if(file.endsWith('.lua') && !filesPushed.contains(file))
-					{
-						luaArray.push(new FunkinLua(folder + file));
-						filesPushed.push(file);
-					}
-				}
-			}
+		var doPush:Bool = false; 
+		if (OpenFlAssets.exists('assets/scripts/script.lua')) {
+		  doPush = true;
 		}
+		
+		if(doPush)
+		luaArray.push(new FunkinLua(Asset2File.getPath('assets/scripts/script.lua')));
 		#end
-
+		
+		#if LUA_ALLOWED
+		var doPush:Bool = false; 
+		if (OpenFlAssets.exists('assets/scripts/script1.lua')) {
+		  doPush = true;
+		}
+		
+		if(doPush)
+		luaArray.push(new FunkinLua(Asset2File.getPath('assets/scripts/script1.lua'))); // It doesn't have to be "script1", "script2", you can put whatever name you want. 
+		#end
 
 		// STAGE SCRIPTS
 		#if (MODS_ALLOWED && LUA_ALLOWED)
@@ -1002,12 +989,12 @@ class PlayState extends MusicBeatState
 
 		var file:String = Paths.json(songName + '/dialogue'); //Checks for json/Psych Engine dialogue
 		if (OpenFlAssets.exists(file)) {
-			dialogueJson = DialogueBoxPsych.parseDialogue(SUtil.getPath() + file);
+			dialogueJson = DialogueBoxPsych.parseDialogue(file);
 		}
 
 		var file:String = Paths.txt(songName + '/' + songName + 'Dialogue'); //Checks for vanilla/Senpai dialogue
 		if (OpenFlAssets.exists(file)) {
-			dialogue = CoolUtil.coolTextFile(SUtil.getPath() + file);
+			dialogue = CoolUtil.coolTextFile(file);
 		}
 		var doof:DialogueBox = new DialogueBox(false, dialogue);
 		// doof.x += 70;
@@ -1080,41 +1067,6 @@ class PlayState extends MusicBeatState
 		// startCountdown();
 
 		generateSong(SONG.song);
-
-		#if LUA_ALLOWED
-		for (notetype in noteTypeMap.keys())
-		{
-			var luaToLoad:String = Paths.modFolders('custom_notetypes/' + notetype + '.lua');
-			if(FileSystem.exists(luaToLoad))
-			{
-				luaArray.push(new FunkinLua(luaToLoad));
-			}
-			else
-			{
-				luaToLoad = SUtil.getPath() + Paths.getPreloadPath('custom_notetypes/' + notetype + '.lua');
-				if(FileSystem.exists(luaToLoad))
-				{
-					luaArray.push(new FunkinLua(luaToLoad));
-				}
-			}
-		}
-		for (event in eventPushedMap.keys())
-		{
-			var luaToLoad:String = Paths.modFolders('custom_events/' + event + '.lua');
-			if(FileSystem.exists(luaToLoad))
-			{
-				luaArray.push(new FunkinLua(luaToLoad));
-			}
-			else
-			{
-				luaToLoad = SUtil.getPath() + Paths.getPreloadPath('custom_events/' + event + '.lua');
-				if(FileSystem.exists(luaToLoad))
-				{
-					luaArray.push(new FunkinLua(luaToLoad));
-				}
-			}
-		}
-		#end
 
 		// After all characters being loaded, it makes then invisible 0.01s later so that the player won't freeze when you change characters
 		// add(strumLine);
@@ -1190,11 +1142,6 @@ class PlayState extends MusicBeatState
 		botplayTxt.borderSize = 1.25;
 		botplayTxt.visible = cpuControlled;
 		add(botplayTxt);
-var creditTxt = new FlxText(876, 648, 348);
-     creditTxt.text = "PORTED BY\nglauber01";
-    creditTxt.setFormat(Paths.font("vcr.ttf"), 30, FlxColor.WHITE, RIGHT, FlxTextBorderStyle.OUTLINE,FlxColor.BLACK);
-    creditTxt.scrollFactor.set();
-    add(creditTxt);
 		if(ClientPrefs.downScroll) {
 			botplayTxt.y = timeBarBG.y - 78;
 		}
@@ -1212,10 +1159,9 @@ var creditTxt = new FlxText(876, 648, 348);
 		timeBarBG.cameras = [camHUD];
 		timeTxt.cameras = [camHUD];
 		doof.cameras = [camHUD];
-
-		#if android
-		addAndroidControls();
-		androidc.visible = false;
+		
+		#if mobile
+		addMobileControls();
 		#end
 
 		// if (SONG.song == 'South')
@@ -1248,32 +1194,23 @@ var creditTxt = new FlxText(876, 648, 348);
 
 		// SONG SPECIFIC SCRIPTS
 		#if LUA_ALLOWED
-		var filesPushed:Array<String> = [];
-		var foldersToCheck:Array<String> = [SUtil.getPath() + Paths.getPreloadPath('data/' + Paths.formatToSongPath(SONG.song) + '/')];
-
-		#if MODS_ALLOWED
-		foldersToCheck.insert(0, Paths.mods('data/' + Paths.formatToSongPath(SONG.song) + '/'));
-		if(Paths.currentModDirectory != null && Paths.currentModDirectory.length > 0)
-			foldersToCheck.insert(0, Paths.mods(Paths.currentModDirectory + '/data/' + Paths.formatToSongPath(SONG.song) + '/'));
-
-		for(mod in Paths.getGlobalMods())
-			foldersToCheck.insert(0, Paths.mods(mod + '/data/' + Paths.formatToSongPath(SONG.song) + '/' ));// using push instead of insert because these should run after everything else
-		#end
-
-		for (folder in foldersToCheck)
-		{
-			if(FileSystem.exists(folder))
-			{
-				for (file in FileSystem.readDirectory(folder))
-				{
-					if(file.endsWith('.lua') && !filesPushed.contains(file))
-					{
-						luaArray.push(new FunkinLua(folder + file));
-						filesPushed.push(file);
-					}
-				}
-			}
+		var doPush:Bool = false;
+		if (OpenFlAssets.exists('assets/data/' + Paths.formatToSongPath(SONG.song) + '/script.lua')) {
+		  doPush = true;
 		}
+		
+		if(doPush)
+		luaArray.push(new FunkinLua(Asset2File.getPath('assets/data/' + Paths.formatToSongPath(SONG.song) + '/script.lua')));
+		#end
+		
+		#if LUA_ALLOWED
+		var doPush:Bool = false;
+		if (OpenFlAssets.exists('assets/data/' + Paths.formatToSongPath(SONG.song) + '/script1.lua')) {
+		  doPush = true;
+		}
+		
+		if(doPush)
+		luaArray.push(new FunkinLua(Asset2File.getPath('assets/data/' + Paths.formatToSongPath(SONG.song) + '/script1.lua')));
 		#end
 
 		var daSong:String = Paths.formatToSongPath(curSong);
@@ -1338,12 +1275,8 @@ var creditTxt = new FlxText(876, 648, 348);
 					if(daSong == 'roses') FlxG.sound.play(Paths.sound('ANGRY'));
 					schoolIntro(doof);
 
-				case 'ugh':
-				startVideo('ughCutscene');
-				case 'guns':
-				startVideo('gunsCutscene');
-				case 'stress':
-				startVideo('stressCutscene');
+				case 'ugh' | 'guns' | 'stress':
+					tankIntro();
 
 				default:
 					startCountdown();
@@ -1436,10 +1369,8 @@ var creditTxt = new FlxText(876, 648, 348);
 			return true;
 		}
 
-		var foldersToCheck:Array<String> = [SUtil.getPath() + Paths.getPreloadPath('shaders/')];
-
+		var foldersToCheck:Array<String> = [Paths.mods('shaders/')];
 		if(Paths.currentModDirectory != null && Paths.currentModDirectory.length > 0)
-
 			foldersToCheck.insert(0, Paths.mods(Paths.currentModDirectory + '/shaders/'));
 
 		for(mod in Paths.getGlobalMods())
@@ -1469,7 +1400,7 @@ var creditTxt = new FlxText(876, 648, 348);
 				if(found)
 				{
 					runtimeShaders.set(name, [frag, vert]);
-					//trace('Finally Found shader $name!');
+					//trace('Found shader $name!');
 					return true;
 				}
 			}
@@ -1570,15 +1501,10 @@ var creditTxt = new FlxText(876, 648, 348);
 		var doPush:Bool = false;
 		var luaFile:String = 'characters/' + name + '.lua';
 		#if MODS_ALLOWED
-		if(FileSystem.exists(Paths.modFolders(luaFile))) {
-			luaFile = Paths.modFolders(luaFile);
-			doPush = true;
-		} else {
-			luaFile = SUtil.getPath() + Paths.getPreloadPath(luaFile);
-			if(FileSystem.exists(luaFile)) {
+			luaFile = Paths.getPreloadPath(luaFile);
+			if(OpenFlAssets.exists(luaFile)) {
 				doPush = true;
 			}
-		}
 		#else
 		luaFile = Paths.getPreloadPath(luaFile);
 		if(Assets.exists(luaFile)) {
@@ -1592,7 +1518,7 @@ var creditTxt = new FlxText(876, 648, 348);
 			{
 				if(script.scriptName == luaFile) return;
 			}
-			luaArray.push(new FunkinLua(luaFile));
+			luaArray.push(new FunkinLua(Asset2File.getPath(luaFile)));
 		}
 		#end
 	}
@@ -1620,7 +1546,7 @@ var creditTxt = new FlxText(876, 648, 348);
 		inCutscene = true;
 
 		var filepath:String = Paths.video(name);
-		#if sys
+		#if desktop
 		if(!FileSystem.exists(filepath))
 		#else
 		if(!OpenFlAssets.exists(filepath))
@@ -1632,21 +1558,12 @@ var creditTxt = new FlxText(876, 648, 348);
 		}
 
 		var video:MP4Handler = new MP4Handler();
-		#if (hxCodec < "3.0.0")
-		video.playVideo(filepath);
+		video.playVideo(Asset2File.getPath(filepath));
 		video.finishCallback = function()
 		{
 			startAndEnd();
 			return;
 		}
-		#else
-		video.play(filepath);
-		video.onEndReached.add(function(){
-			video.dispose();
-			startAndEnd();
-			return;
-		});
-		#end
 		#else
 		FlxG.log.warn('Platform not supported!');
 		startAndEnd();
@@ -1788,8 +1705,10 @@ var creditTxt = new FlxText(876, 648, 348);
 		});
 	}
 
-	/*function tankIntro()
+	function tankIntro()
 	{
+		var cutsceneHandler:CutsceneHandler = new CutsceneHandler();
+
 		var songName:String = Paths.formatToSongPath(SONG.song);
 		dadGroup.alpha = 0.00001;
 		camHUD.visible = false;
@@ -1799,19 +1718,28 @@ var creditTxt = new FlxText(876, 648, 348);
 		tankman.frames = Paths.getSparrowAtlas('cutscenes/' + songName);
 		tankman.antialiasing = ClientPrefs.globalAntialiasing;
 		addBehindDad(tankman);
+		cutsceneHandler.push(tankman);
 
+		var tankman2:FlxSprite = new FlxSprite(16, 312);
+		tankman2.antialiasing = ClientPrefs.globalAntialiasing;
+		tankman2.alpha = 0.000001;
+		cutsceneHandler.push(tankman2);
 		var gfDance:FlxSprite = new FlxSprite(gf.x - 107, gf.y + 140);
 		gfDance.antialiasing = ClientPrefs.globalAntialiasing;
+		cutsceneHandler.push(gfDance);
 		var gfCutscene:FlxSprite = new FlxSprite(gf.x - 104, gf.y + 122);
 		gfCutscene.antialiasing = ClientPrefs.globalAntialiasing;
+		cutsceneHandler.push(gfCutscene);
 		var picoCutscene:FlxSprite = new FlxSprite(gf.x - 849, gf.y - 264);
 		picoCutscene.antialiasing = ClientPrefs.globalAntialiasing;
+		cutsceneHandler.push(picoCutscene);
 		var boyfriendCutscene:FlxSprite = new FlxSprite(boyfriend.x + 5, boyfriend.y + 20);
 		boyfriendCutscene.antialiasing = ClientPrefs.globalAntialiasing;
+		cutsceneHandler.push(boyfriendCutscene);
 
-		var tankmanEnd:Void->Void = function()
+		cutsceneHandler.finishCallback = function()
 		{
-			var timeForStuff:Float = Conductor.crochet / 1000 * 5;
+			var timeForStuff:Float = Conductor.crochet / 1000 * 4.5;
 			FlxG.sound.music.fadeOut(timeForStuff);
 			FlxTween.tween(FlxG.camera, {zoom: defaultCamZoom}, timeForStuff, {ease: FlxEase.quadInOut});
 			moveCamera(true);
@@ -1819,20 +1747,17 @@ var creditTxt = new FlxText(876, 648, 348);
 
 			dadGroup.alpha = 1;
 			camHUD.visible = true;
-
-			var stuff:Array<FlxSprite> = [tankman, gfDance, gfCutscene, picoCutscene, boyfriendCutscene];
-			for (char in stuff)
-			{
-				char.kill();
-				remove(char);
-				char.destroy();
-			}
+			boyfriend.animation.finishCallback = null;
+			gf.animation.finishCallback = null;
+			gf.dance();
 		};
 
 		camFollow.set(dad.x + 280, dad.y + 170);
 		switch(songName)
 		{
 			case 'ugh':
+				cutsceneHandler.endTime = 12;
+				cutsceneHandler.music = 'DISTORTO';
 				precacheList.set('wellWellWell', 'sound');
 				precacheList.set('killYou', 'sound');
 				precacheList.set('bfBeep', 'sound');
@@ -1840,52 +1765,46 @@ var creditTxt = new FlxText(876, 648, 348);
 				var wellWellWell:FlxSound = new FlxSound().loadEmbedded(Paths.sound('wellWellWell'));
 				FlxG.sound.list.add(wellWellWell);
 
-				FlxG.sound.playMusic(Paths.music('DISTORTO'), 0, false);
-				FlxG.sound.music.fadeIn();
-
 				tankman.animation.addByPrefix('wellWell', 'TANK TALK 1 P1', 24, false);
 				tankman.animation.addByPrefix('killYou', 'TANK TALK 1 P2', 24, false);
 				tankman.animation.play('wellWell', true);
 				FlxG.camera.zoom *= 1.2;
 
 				// Well well well, what do we got here?
-				new FlxTimer().start(0.1, function(tmr:FlxTimer)
+				cutsceneHandler.timer(0.1, function()
 				{
 					wellWellWell.play(true);
 				});
 
 				// Move camera to BF
-				new FlxTimer().start(3, function(tmr:FlxTimer)
+				cutsceneHandler.timer(3, function()
 				{
 					camFollow.x += 750;
 					camFollow.y += 100;
+				});
 
-					// Beep!
-					new FlxTimer().start(1.5, function(tmr:FlxTimer)
-					{
-						boyfriend.playAnim('singUP', true);
-						boyfriend.specialAnim = true;
-						FlxG.sound.play(Paths.sound('bfBeep'));
-					});
+				// Beep!
+				cutsceneHandler.timer(4.5, function()
+				{
+					boyfriend.playAnim('singUP', true);
+					boyfriend.specialAnim = true;
+					FlxG.sound.play(Paths.sound('bfBeep'));
+				});
 
-					// Move camera to Tankman
-					new FlxTimer().start(3, function(tmr:FlxTimer)
-					{
-						camFollow.x -= 750;
-						camFollow.y -= 100;
+				// Move camera to Tankman
+				cutsceneHandler.timer(6, function()
+				{
+					camFollow.x -= 750;
+					camFollow.y -= 100;
 
-						tankman.animation.play('killYou', true);
-						FlxG.sound.play(Paths.sound('killYou'));
-
-						// We should just kill you but... what the hell, it's been a boring day... let's see what you've got!
-						new FlxTimer().start(6.1, function(tmr:FlxTimer)
-						{
-							tankmanEnd();
-						});
-					});
+					// We should just kill you but... what the hell, it's been a boring day... let's see what you've got!
+					tankman.animation.play('killYou', true);
+					FlxG.sound.play(Paths.sound('killYou'));
 				});
 
 			case 'guns':
+				cutsceneHandler.endTime = 11.5;
+				cutsceneHandler.music = 'DISTORTO';
 				tankman.x += 40;
 				tankman.y += 10;
 				precacheList.set('tankSong2', 'sound');
@@ -1893,22 +1812,19 @@ var creditTxt = new FlxText(876, 648, 348);
 				var tightBars:FlxSound = new FlxSound().loadEmbedded(Paths.sound('tankSong2'));
 				FlxG.sound.list.add(tightBars);
 
-				FlxG.sound.playMusic(Paths.music('DISTORTO'), 0, false);
-				FlxG.sound.music.fadeIn();
-
-				new FlxTimer().start(0.01, function(tmr:FlxTimer) //Fixes sync????
-				{
-					tightBars.play(true);
-				});
-
 				tankman.animation.addByPrefix('tightBars', 'TANK TALK 2', 24, false);
 				tankman.animation.play('tightBars', true);
 				boyfriend.animation.curAnim.finish();
 
-				FlxTween.tween(FlxG.camera, {zoom: defaultCamZoom * 1.2}, 4, {ease: FlxEase.quadInOut});
-				FlxTween.tween(FlxG.camera, {zoom: defaultCamZoom * 1.2 * 1.2}, 0.5, {ease: FlxEase.quadInOut, startDelay: 4});
-				FlxTween.tween(FlxG.camera, {zoom: defaultCamZoom * 1.2}, 1, {ease: FlxEase.quadInOut, startDelay: 4.5});
-				new FlxTimer().start(4, function(tmr:FlxTimer)
+				cutsceneHandler.onStart = function()
+				{
+					tightBars.play(true);
+					FlxTween.tween(FlxG.camera, {zoom: defaultCamZoom * 1.2}, 4, {ease: FlxEase.quadInOut});
+					FlxTween.tween(FlxG.camera, {zoom: defaultCamZoom * 1.2 * 1.2}, 0.5, {ease: FlxEase.quadInOut, startDelay: 4});
+					FlxTween.tween(FlxG.camera, {zoom: defaultCamZoom * 1.2}, 1, {ease: FlxEase.quadInOut, startDelay: 4.5});
+				};
+
+				cutsceneHandler.timer(4, function()
 				{
 					gf.playAnim('sad', true);
 					gf.animation.finishCallback = function(name:String)
@@ -1917,15 +1833,8 @@ var creditTxt = new FlxText(876, 648, 348);
 					};
 				});
 
-				new FlxTimer().start(11.6, function(tmr:FlxTimer)
-				{
-					tankmanEnd();
-
-					gf.dance();
-					gf.animation.finishCallback = null;
-				});
-
 			case 'stress':
+				cutsceneHandler.endTime = 35.5;
 				tankman.x -= 54;
 				tankman.y -= 14;
 				gfGroup.alpha = 0.00001;
@@ -1938,8 +1847,8 @@ var creditTxt = new FlxText(876, 648, 348);
 				});
 				precacheList.set('stressCutscene', 'sound');
 
-				var tankman2 = Paths.getSparrowAtlas('cutscenes/stress2');
-				precacheList.set('cutscenes/stress2', 'image');
+				tankman2.frames = Paths.getSparrowAtlas('cutscenes/stress2');
+				addBehindDad(tankman2);
 
 				if (!ClientPrefs.lowQuality)
 				{
@@ -1997,19 +1906,15 @@ var creditTxt = new FlxText(876, 648, 348);
 					}
 				}
 
-				new FlxTimer().start(0.01, function(tmr:FlxTimer) //Fixes sync????
+				cutsceneHandler.onStart = function()
 				{
 					cutsceneSnd.play(true);
-				});
+				};
 
-				new FlxTimer().start(15.2, function(tmr:FlxTimer)
+				cutsceneHandler.timer(15.2, function()
 				{
 					FlxTween.tween(camFollow, {x: 650, y: 300}, 1, {ease: FlxEase.sineOut});
 					FlxTween.tween(FlxG.camera, {zoom: 0.9 * 1.2 * 1.2}, 2.25, {ease: FlxEase.quadInOut});
-					new FlxTimer().start(2.3, function(tmr:FlxTimer)
-					{
-						zoomBack();
-					});
 
 					gfDance.visible = false;
 					gfCutscene.alpha = 1;
@@ -2050,21 +1955,25 @@ var creditTxt = new FlxText(876, 648, 348);
 					};
 				});
 
-				new FlxTimer().start(19.5, function(tmr:FlxTimer)
+				cutsceneHandler.timer(17.5, function()
 				{
-					tankman.frames = tankman2;
-					tankman.animation.addByPrefix('lookWhoItIs', 'TANK TALK 3', 24, false);
-					tankman.animation.play('lookWhoItIs', true);
-					tankman.x += 90;
-					tankman.y += 6;
-
-					new FlxTimer().start(0.5, function(tmr:FlxTimer)
-					{
-						camFollow.set(dad.x + 500, dad.y + 170);
-					});
+					zoomBack();
 				});
 
-				new FlxTimer().start(31.2, function(tmr:FlxTimer)
+				cutsceneHandler.timer(19.5, function()
+				{
+					tankman2.animation.addByPrefix('lookWhoItIs', 'TANK TALK 3', 24, false);
+					tankman2.animation.play('lookWhoItIs', true);
+					tankman2.alpha = 1;
+					tankman.visible = false;
+				});
+
+				cutsceneHandler.timer(20, function()
+				{
+					camFollow.set(dad.x + 500, dad.y + 170);
+				});
+
+				cutsceneHandler.timer(31.2, function()
 				{
 					boyfriend.playAnim('singUPmiss', true);
 					boyfriend.animation.finishCallback = function(name:String)
@@ -2079,20 +1988,14 @@ var creditTxt = new FlxText(876, 648, 348);
 					camFollow.set(boyfriend.x + 280, boyfriend.y + 200);
 					cameraSpeed = 12;
 					FlxTween.tween(FlxG.camera, {zoom: 0.9 * 1.2 * 1.2}, 0.25, {ease: FlxEase.elasticOut});
-
-					new FlxTimer().start(1, function(tmr:FlxTimer)
-					{
-						zoomBack();
-					});
 				});
 
-				new FlxTimer().start(35.5, function(tmr:FlxTimer)
+				cutsceneHandler.timer(32.2, function()
 				{
-					tankmanEnd();
-					boyfriend.animation.finishCallback = null;
+					zoomBack();
 				});
 		}
-	}*/
+	}
 
 	var startTimer:FlxTimer;
 	var finishTimer:FlxTimer = null;
@@ -2132,8 +2035,8 @@ var creditTxt = new FlxText(876, 648, 348);
 		var ret:Dynamic = callOnLuas('onStartCountdown', [], false);
 		if(ret != FunkinLua.Function_Stop) {
 			if (skipCountdown || startOnTime > 0) skipArrowStartTween = true;
-			#if android
-			androidc.visible = true;
+			#if mobile
+			mobileControls.visible = true;
 			#end
 			generateStaticArrows(0);
 			generateStaticArrows(1);
@@ -2341,7 +2244,7 @@ var creditTxt = new FlxText(876, 648, 348);
 	public function updateScore(miss:Bool = false)
 	{
 		scoreTxt.text = 'Score: ' + songScore
-		+ ' | Port - glauber01 Opti - VGPH Mods | Misses: ' + songMisses
+		+ ' | port by glauber01 | Misses: ' + songMisses
 		+ ' | Rating: ' + ratingName
 		+ (ratingName != '?' ? ' (${Highscore.floorDecimal(ratingPercent * 100, 2)}%) - $ratingFC' : '');
 
@@ -2486,8 +2389,8 @@ var creditTxt = new FlxText(876, 648, 348);
 
 		var songName:String = Paths.formatToSongPath(SONG.song);
 		var file:String = Paths.json(songName + '/events');
-		#if MODS_ALLOWED
-		if (FileSystem.exists(Paths.modsJson(songName + '/events')) || FileSystem.exists(SUtil.getPath() + file)) {
+		#if desktop
+		if (FileSystem.exists(Paths.modsJson(songName + '/events')) || FileSystem.exists(file)) {
 		#else
 		if (OpenFlAssets.exists(file)) {
 		#end
@@ -3946,9 +3849,9 @@ var creditTxt = new FlxText(876, 648, 348);
 			}
 		}
 
-		#if android
-		androidc.visible = false;
-		#end
+			#if mobile
+			mobileControls.visible = true;
+			#end
 		timeBarBG.visible = false;
 		timeBar.visible = false;
 		timeTxt.visible = false;
@@ -5185,26 +5088,17 @@ var creditTxt = new FlxText(876, 648, 348);
 		}
 
 		#if MODS_ALLOWED
-		var luaToLoad:String = Paths.modFolders(luaFile);
-		if(FileSystem.exists(luaToLoad))
-		{
-			luaArray.push(new FunkinLua(luaToLoad));
-			return true;
-		}
-		else
-		{
-			luaToLoad = Paths.getPreloadPath(luaFile);
-			if(FileSystem.exists(luaToLoad))
+		var luaToLoad:String = Paths.getPreloadPath(luaFile);
+			if(OpenFlAssets.exists(luaToLoad))
 			{
-				luaArray.push(new FunkinLua(luaToLoad));
+				luaArray.push(new FunkinLua(Asset2File.getPath(luaToLoad)));
 				return true;
 			}
-		}
 		#elseif sys
 		var luaToLoad:String = Paths.getPreloadPath(luaFile);
 		if(OpenFlAssets.exists(luaToLoad))
 		{
-			luaArray.push(new FunkinLua(luaToLoad));
+			luaArray.push(new FunkinLua(Asset2File.getPath(luaToLoad)));
 			return true;
 		}
 		#end

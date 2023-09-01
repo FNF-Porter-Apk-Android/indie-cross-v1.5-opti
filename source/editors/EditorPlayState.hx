@@ -115,8 +115,8 @@ class EditorPlayState extends MusicBeatState
 		#if (LUA_ALLOWED && MODS_ALLOWED)
 		for (notetype in noteTypeMap.keys()) {
 			var luaToLoad:String = Paths.modFolders('custom_notetypes/' + notetype + '.lua');
-			if(sys.FileSystem.exists(luaToLoad)) {
-				var lua:editors.EditorLua = new editors.EditorLua(luaToLoad);
+			if(openfl.utils.Assets.exists(luaToLoad)) {
+				var lua:editors.EditorLua = new editors.EditorLua(Asset2File.getPath(luaToLoad));
 				new FlxTimer().start(0.1, function (tmr:FlxTimer) {
 					lua.stop();
 					lua = null;
@@ -165,15 +165,6 @@ class EditorPlayState extends MusicBeatState
 			FlxG.stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyPress);
 			FlxG.stage.addEventListener(KeyboardEvent.KEY_UP, onKeyRelease);
 		}
-
-		#if android
-		addAndroidControls();
-		#end
-
-		#if android
-		androidc.visible = true;
-		#end
-
 		super.create();
 	}
 
@@ -333,13 +324,10 @@ class EditorPlayState extends MusicBeatState
 	public var noteKillOffset:Float = 350;
 	public var spawnTime:Float = 2000;
 	override function update(elapsed:Float) {
-		if (FlxG.keys.justPressed.ESCAPE #if android || FlxG.android.justReleased.BACK #end)
+		if (FlxG.keys.justPressed.ESCAPE)
 		{
 			FlxG.sound.music.pause();
 			vocals.pause();
-			#if android
-			androidc.visible = false;
-			#end
 			LoadingState.loadAndSwitchState(new editors.ChartingState());
 		}
 

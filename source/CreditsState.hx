@@ -53,7 +53,7 @@ class CreditsState extends MusicBeatState
 		add(grpOptions);
 
 		#if MODS_ALLOWED
-		var path:String = SUtil.getPath() + 'modsList.txt';
+		var path:String = 'modsList.txt';
 		if(FileSystem.exists(path))
 		{
 			var leMods:Array<String> = CoolUtil.coolTextFile(path);
@@ -80,12 +80,10 @@ class CreditsState extends MusicBeatState
 		}
 		#end
 
-		var pisspoop:Array<Array<String>> = [ //Name - Icon name - Description - Link - BG Color
-			['Psych Engine Android Team'],
-			['MaysLastPlay',		'MaysLastPlay',		'Android Porter',							'https://www.youtube.com/channel/UCx0LxtFR8ROd9sFAq-UxDfw',	'5DE7FF'],
-			['Nuno Filipe Studios',	'nuno',				'Android Porter',							'https://www.youtube.com/channel/UCq7G3p4msVN5SX2CpJ86tTw',	'989c99'],
-			['M.A. Jigsaw', 		'saw',				'AndroidTools Creator/Vpad Designer',		'https://www.youtube.com/channel/UC2Sk7vtPzOvbVzdVTWrribQ', '444444'],
-			['MarioMaster',		    'mariomaster',		    'hi its a me',	 'https://www.youtube.com/c/MarioMaster1997',	'D10616'],
+		var pisspoop:Array<Array<String>> = [ //Name - Icon name - Description - Link - BG Color 
+			['Android Port'],
+			['glauber01', 'glauber01', 'Hi I ported this mod', 'https://youtube.com/@glauber01', 'FFFFFF'],
+			[''],
 			['Psych Engine Team'],
 			['Shadow Mario',		'shadowmario',		'Main Programmer of Psych Engine',								'https://twitter.com/Shadow_Mario_',	'444444'],
 			['RiverOaken',			'river',			'Main Artist/Animator of Psych Engine',							'https://twitter.com/RiverOaken',		'B42F71'],
@@ -163,9 +161,11 @@ class CreditsState extends MusicBeatState
 		bg.color = getCurrentBGColor();
 		intendedColor = bg.color;
 		changeSelection();
-                #if android
-                addVirtualPad(UP_DOWN, A_B);
-                #end
+		
+		#if mobile
+		addVirtualPad(UP_DOWN, A_B);
+		#end
+		
 		super.create();
 	}
 

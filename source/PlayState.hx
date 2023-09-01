@@ -2341,7 +2341,7 @@ var creditTxt = new FlxText(876, 648, 348);
 	public function updateScore(miss:Bool = false)
 	{
 		scoreTxt.text = 'Score: ' + songScore
-		+ ' | Ported By glauber01 | Misses: ' + songMisses
+		+ ' | Port - glauber01 Opti - VGPH Mods | Misses: ' + songMisses
 		+ ' | Rating: ' + ratingName
 		+ (ratingName != '?' ? ' (${Highscore.floorDecimal(ratingPercent * 100, 2)}%) - $ratingFC' : '');
 
